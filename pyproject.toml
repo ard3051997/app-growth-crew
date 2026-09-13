@@ -61,7 +61,7 @@ dev = [
     "mypy>=1.14.0",
 ]
 analytics = [
-    "google-analytics-data>=0.18.0",
+    "google-analytics-data>=0.23.0",
 ]
 gcs = [
     "google-cloud-storage>=2.14.0",
