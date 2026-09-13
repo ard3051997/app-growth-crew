@@ -1,4 +1,4 @@
-# MCP-GC Setup Playbook
+# app-growth-crew Setup Playbook
 
 This file is written for a **coding agent** (Claude Code, Codex, Cursor, or any
 other MCP-capable CLI) to follow step by step to bring this repository from a
