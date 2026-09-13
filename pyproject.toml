@@ -38,7 +38,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
-    "mcp>=1.26.0",
+    "mcp>=2.2.0",
     "google-api-python-client>=2.180.0",
     "google-auth>=2.40.0",
     "pydantic>=2.10.0",
