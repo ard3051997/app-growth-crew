@@ -1,0 +1,149 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ruff
+.ruff_cache/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project-specific
+# Service account keys (KEEP THESE SECRET!)
+*-service-account.json
+service-account*.json
+credentials*.json
+!pyproject.toml
+
+# Local development
+.env.local
+.env.development
+*.local
+
+# uv
+.uv/
+
+# Local credential files
+token.json
+kalagato-prod-*.json
+client_secret_*.json
+.env.admob
+google-ads.yaml
+google-ads*.yaml
+
+# All .env variants (base .env is covered above at line 56)
+.env.*
+
+# Local DB and JSON exports
+data/
+
+# Local deepwork orchestration state
+.slim/deepwork/
+
+# Apple / App Store Connect private keys
+*.p8
+
+# MCP client config and Firebase project ref (may embed local secrets/project IDs)
+.mcp.json
+.firebaserc
+
+# Per-app credential overrides (real API keys) — copy config/apps.json.example instead
+config/apps.json
+
+# Node deps (project only needs puppeteer-core for one-off scraping scripts)
+node_modules/
+package-lock.json
+
+# Disposable one-off scripts/exports -- routinely contain hardcoded API keys
+scratch/
+
+# Browser-automation scrape dumps (screenshots + raw page JSON, regenerable)
+artifacts/
+
+# Nested standalone Android app repo (has its own .git) -- not part of this repo
+HDC-Pro/

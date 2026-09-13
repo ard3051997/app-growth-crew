@@ -1,0 +1,44 @@
+name: Qlty Coverage
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  coverage:
+    name: Upload Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Run tests with coverage
+        run: uv run pytest --cov=src/play_store_mcp --cov-report=lcov:coverage.lcov
+
+      - name: Upload coverage to Qlty
+        uses: qltysh/qlty-action/coverage@a19242102d17e497f437d7466aa01b528537e899 # v2.2.0
+        with:
+          token: ${{ secrets.QLTY_COVERAGE_TOKEN }}
+          files: coverage.lcov

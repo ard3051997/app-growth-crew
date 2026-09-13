@@ -1,0 +1,18 @@
+{
+  "apps": [
+    {
+      "package_name": "com.example.app",
+      "display_name": "Example App",
+      "app_category": "utilities",
+      "google_credentials_path": null,
+      "ga4_property_id": null,
+      "revenuecat_api_key": null,
+      "revenuecat_project_id": null,
+      "admob_account_id": null,
+      "gcs_play_console_bucket": null,
+      "google_ads_config_path": null,
+      "google_ads_customer_id": null,
+      "events_md_path": null
+    }
+  ]
+}

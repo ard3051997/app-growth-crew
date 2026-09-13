@@ -1,0 +1,36 @@
+{
+	auto_https off
+	admin off
+}
+
+:8080 {
+	route {
+		respond /healthz "ok" 200
+
+		@operator_routes not path /api/health /api/webhooks/revenuecat
+		basic_auth @operator_routes {
+			{$PROXY_USER} {$PROXY_PASSWORD_HASH}
+		}
+
+		header {
+			-Server
+			X-Content-Type-Options "nosniff"
+			X-Frame-Options "DENY"
+			Referrer-Policy "same-origin"
+		}
+
+		reverse_proxy /api/* api:8000 {
+			header_up X-MCP-GC-Proxy-Token {$MCP_GC_PROXY_SHARED_TOKEN}
+			header_up X-MCP-GC-Proxy-Role {$MCP_GC_PROXY_ROLE}
+		}
+
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}

@@ -1,0 +1,11 @@
+*
+!pyproject.toml
+!uv.lock
+!README.md
+!src/
+!src/**
+!deploy/
+deploy/*
+!deploy/load-secrets.sh
+!deploy/scheduler-read-only-guard.sh
+!deploy/db-tools.sh

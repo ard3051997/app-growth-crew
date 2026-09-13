@@ -1,0 +1,71 @@
+{
+  "mcpServers": {
+    "play-store": {
+      "command": "uv",
+      "args": ["run", "play-store-mcp"]
+    },
+    "revenuecat": {
+      "command": "uv",
+      "args": ["run", "revenuecat-mcp"]
+    },
+    "analytics": {
+      "command": "uv",
+      "args": ["run", "analytics-mcp"]
+    },
+    "admob": {
+      "command": "uv",
+      "args": ["run", "admob-mcp"]
+    },
+    "aso-keyword": {
+      "command": "uv",
+      "args": ["run", "aso-keyword-mcp"]
+    },
+    "funnel-engine": {
+      "command": "uv",
+      "args": ["run", "funnel-engine-mcp"]
+    },
+    "gcs": {
+      "command": "uv",
+      "args": ["run", "gcs-mcp"]
+    },
+    "journey-map": {
+      "command": "uv",
+      "args": ["run", "journey-map-mcp"]
+    },
+    "fcm-push": {
+      "command": "uv",
+      "args": ["run", "fcm-push-mcp"]
+    },
+    "app-store": {
+      "command": "uv",
+      "args": ["run", "app-store-mcp"]
+    },
+    "firebase": {
+      "command": "npx",
+      "args": ["-y", "firebase-tools@15.28.2", "mcp"]
+    },
+    "image-gen": {
+      "command": "uv",
+      "args": ["run", "image-gen-mcp"]
+    },
+    "mobile-mcp": {
+      "command": "npx",
+      "args": ["-y", "@mobilenext/mobile-mcp@latest"]
+    },
+    "google-ads": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/googleads/google-ads-mcp.git",
+        "google-ads-mcp"
+      ],
+      "env": {
+        "GOOGLE_ADS_CONFIGURATION_FILE_PATH": "${GOOGLE_ADS_CONFIG_PATH}"
+      }
+    },
+    "atlassian": {
+      "command": "uvx",
+      "args": ["mcp-atlassian"]
+    }
+  }
+}

@@ -1,0 +1,204 @@
+name: mcp-gc-beta
+
+x-backend: &backend
+  image: mcp-gc-beta/backend:${MCP_GC_IMAGE_TAG:-local}
+  build:
+    context: .
+    dockerfile: deploy/backend.Dockerfile
+  read_only: true
+  init: true
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+  tmpfs:
+    - /tmp
+  restart: unless-stopped
+  stop_grace_period: 30s
+
+services:
+  api:
+    <<: *backend
+    cap_add:
+      - CHOWN
+      - DAC_READ_SEARCH
+      - SETGID
+      - SETUID
+    command:
+      - python
+      - -m
+      - uvicorn
+      - api_server.main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --proxy-headers
+      - --forwarded-allow-ips=*
+    environment:
+      MCP_GC_READ_ONLY: "${MCP_GC_READ_ONLY:-1}"
+      MCP_GC_API_AUTH_REQUIRED: "1"
+      MCP_GC_CONFIG_WRITES_ENABLED: "0"
+      MCP_GC_ENV: managed
+      MCP_GC_INSECURE_DEV_WEBHOOKS: "0"
+      MCP_GC_MANAGED: "1"
+      MCP_GC_SECRET_FILE: /run/secrets/backend.env
+      MCP_GC_RUN_AS: app
+    volumes:
+      - mcp_gc_data:/app/data
+      - type: bind
+        source: ${MCP_GC_APPS_CONFIG:-./deploy/config/apps.json}
+        target: /app/config/apps.json
+        read_only: true
+    secrets:
+      - source: backend_env
+        target: backend.env
+      - source: api_google_credentials
+        target: google-service-account.json
+    expose:
+      - "8000"
+    healthcheck:
+      test:
+        - CMD
+        - gosu
+        - app
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3).read()"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - backend
+
+  scheduler:
+    <<: *backend
+    cap_add:
+      - CHOWN
+      - DAC_READ_SEARCH
+      - SETGID
+      - SETUID
+    command:
+      - /usr/local/bin/scheduler-read-only-guard
+      - python
+      - /app/src/run_autonomous_loop.py
+    environment:
+      MCP_GC_READ_ONLY: "1"
+      MCP_GC_FORCE_READ_ONLY: "1"
+      MCP_GC_CONFIG_WRITES_ENABLED: "0"
+      MCP_GC_ENV: managed
+      MCP_GC_INSECURE_DEV_WEBHOOKS: "0"
+      MCP_GC_MANAGED: "1"
+      MCP_GC_SECRET_FILE: /run/secrets/scheduler.env
+      MCP_GC_RUN_AS: app
+    volumes:
+      - mcp_gc_data:/app/data
+      - type: bind
+        source: ${MCP_GC_APPS_CONFIG:-./deploy/config/apps.json}
+        target: /app/config/apps.json
+        read_only: true
+    secrets:
+      - source: scheduler_env
+        target: scheduler.env
+      - source: scheduler_google_credentials
+        target: google-service-account-read-only.json
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - "gosu app sqlite3 -readonly /app/data/store_performance.db 'PRAGMA schema_version;' >/dev/null"
+      interval: 1m
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - backend
+
+  proxy:
+    image: mcp-gc-beta/frontend:${MCP_GC_IMAGE_TAG:-local}
+    build:
+      context: .
+      dockerfile: deploy/frontend.Dockerfile
+      args:
+        VITE_API_BASE_URL: /api
+    read_only: true
+    init: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_READ_SEARCH
+      # The upstream Caddy binary carries cap_net_bind_service; retaining this
+      # capability is required for exec under no-new-privileges, even on :8080.
+      - NET_BIND_SERVICE
+      - SETGID
+      - SETUID
+    environment:
+      MCP_GC_SECRET_FILE: /run/secrets/runtime.env
+      MCP_GC_RUN_AS: app
+      XDG_CONFIG_HOME: /tmp/config
+      XDG_DATA_HOME: /tmp/data
+    secrets:
+      - source: proxy_env
+        target: runtime.env
+    tmpfs:
+      - /tmp
+    ports:
+      - "${MCP_GC_BIND_ADDRESS:-127.0.0.1}:${MCP_GC_PORT:-8080}:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "su-exec", "app", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    stop_grace_period: 15s
+    networks:
+      - frontend
+      - backend
+
+  backup:
+    <<: *backend
+    user: "10001:10001"
+    entrypoint: ["/usr/local/bin/db-tools"]
+    command: ["backup"]
+    environment:
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+    volumes:
+      - mcp_gc_data:/app/data
+      - mcp_gc_backups:/backups
+    network_mode: none
+    restart: "no"
+    profiles:
+      - tools
+
+volumes:
+  mcp_gc_data:
+    name: ${MCP_GC_DATA_VOLUME:-mcp-gc-beta-data}
+  mcp_gc_backups:
+    name: ${MCP_GC_BACKUP_VOLUME:-mcp-gc-beta-backups}
+
+networks:
+  frontend:
+  backend:
+    internal: true
+
+secrets:
+  backend_env:
+    file: ${MCP_GC_BACKEND_SECRET:-./deploy/secrets/backend.env}
+  scheduler_env:
+    file: ${MCP_GC_SCHEDULER_SECRET:-./deploy/secrets/scheduler.env}
+  proxy_env:
+    file: ${MCP_GC_PROXY_SECRET:-./deploy/secrets/proxy.env}
+  api_google_credentials:
+    file: ${MCP_GC_API_GOOGLE_CREDENTIALS:-./deploy/secrets/google-service-account.json}
+  scheduler_google_credentials:
+    file: ${MCP_GC_SCHEDULER_GOOGLE_CREDENTIALS:-./deploy/secrets/google-service-account-read-only.json}

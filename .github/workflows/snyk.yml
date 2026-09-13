@@ -1,0 +1,72 @@
+name: Snyk Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 5 * * 1"
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  snyk:
+    name: Snyk Open Source
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Export requirements.txt
+        run: uv export --no-hashes --no-dev -o requirements.txt
+
+      - name: Run Snyk Open Source
+        uses: snyk/actions/python-3.13@9adf32b1121593767fc3c057af55b55db032dc04 # master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high --file=requirements.txt --sarif-file-output=snyk-open-source.sarif
+
+      - name: Upload Snyk Open Source SARIF
+        if: always() && hashFiles('snyk-open-source.sarif') != ''
+        uses: github/codeql-action/upload-sarif@68bde559dea0fdcac2102bfdf6230c5f70eb485e # v4.35.4
+        with:
+          sarif_file: snyk-open-source.sarif
+          category: snyk-open-source
+
+      - name: Run Snyk Code
+        uses: snyk/actions/python-3.13@9adf32b1121593767fc3c057af55b55db032dc04 # master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: code test
+          args: --severity-threshold=high --sarif-file-output=snyk-code.sarif
+
+      - name: Upload Snyk Code SARIF
+        if: always() && hashFiles('snyk-code.sarif') != ''
+        uses: github/codeql-action/upload-sarif@68bde559dea0fdcac2102bfdf6230c5f70eb485e # v4.35.4
+        with:
+          sarif_file: snyk-code.sarif
+          category: snyk-code
