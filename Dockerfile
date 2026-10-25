@@ -1,5 +1,5 @@
 # Build stage
-FROM python:3.14-alpine@sha256:dd4d2bd5b53d9b25a51da13addf2be586beebd5387e289e798e4083d94ca837a AS builder
+FROM python:3.15-alpine@sha256:d44b1254cb92329418d164b22b20d86bbd3869d48e80e09e476531a409a728bb AS builder
 
 WORKDIR /build
 
@@ -16,7 +16,7 @@ RUN uv build --wheel --out-dir /build/dist && \
     uv pip install --no-cache /build/dist/*.whl --python /app/.venv/bin/python
 
 # Runtime stage
-FROM python:3.14-alpine@sha256:dd4d2bd5b53d9b25a51da13addf2be586beebd5387e289e798e4083d94ca837a
+FROM python:3.15-alpine@sha256:d44b1254cb92329418d164b22b20d86bbd3869d48e80e09e476531a409a728bb
 
 LABEL org.opencontainers.image.source="https://github.com/lusky3/play-store-mcp"
 LABEL org.opencontainers.image.url="https://github.com/lusky3/play-store-mcp"
